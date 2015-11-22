@@ -62,9 +62,11 @@ class Maker:
 
         self.current_pop_time = pop_time
         time.sleep(pop_time)
-        self.stop()
-        # How to make this type specific?
-        on_finish_function()
+        # Until we do thread stoppin', just check if it was stopped during sleep
+        if self.is_on:
+            self.stop()
+            # How to make this type specific?
+            on_finish_function()
 
     def stop(self):
         """
@@ -81,6 +83,12 @@ class Maker:
         RPIO.output(self.pin_switch, False)
         self.is_on = True
         self.start_time = datetime.utcnow()
+
+    def get_status(self):
+        if self.is_on:
+            return "on"
+        else:
+            return "off"
 
     def time_until_done(self):
         """
@@ -199,7 +207,15 @@ class Crawler:
 class Robot:
     """
         A wrapper for commanding the Roomba sooper cool deliver system
+
+        Current Command format:
+        {
+            action: stay, deliver, comeback
+            message: a message to the popcorn getter
+            # music: url to music to play ??
+        }
     """
+    action = "stay"
 
     def __init__(self, message="Sup dog, here's some popcorn"):
         self.message = message
@@ -210,17 +226,38 @@ class Robot:
     def get_message(self):
         return self.message
 
-    def come_back(self):
+    def current_command(self):
+        """
+
+        :return:
+        """
+        return {'message': self.message, 'action': self.action}
+
+    def set_home(self):
+        """
+
+        :return:
+        """
+        self.action = "stay"
+        self.message = "Turn down on a Tuesday"
+
+    def come_back(self, message=None):
         """
             Send a push notification to return to the base station
         :return:
         """
-        pass
+        self.action = "deliver"
+        if message is not None:
+            self.message = message
+        print "Coming home!"
 
-    def deliver(self):
+    def deliver(self, message=None):
         """
             Send a push notification to go search out the person
         :return:
         """
+        self.action = "deliver"
+        if message is not None:
+            self.message = message
         print "Delivering: " + self.get_message()
 

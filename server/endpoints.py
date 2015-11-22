@@ -6,7 +6,20 @@ from flask import make_response, jsonify, request
 
 @app.route('/time')
 def time():
-    return make_response(jsonify(time_remaining=maker.time_until_done()), 200)
+    return make_response(jsonify(time_remaining=maker.time_until_done(),
+                                 maker_status=maker.get_status()), 200)
+
+
+@app.route('/stop', methods=['GET', 'POST'])
+def stop():
+    """
+
+    :return:
+    """
+    #  Todo: kill the thread as well
+    maker.stop()
+    return make_response(jsonify(status="Great Success",
+                                 maker_status=maker.get_status()), 200)
 
 
 @app.route('/make', methods=['GET', 'POST'])
@@ -28,7 +41,9 @@ def make():
 
     if maker.is_making():
         return make_response(jsonify(status="Failure",
+                                     maker_status=maker.get_status(),
                                      error="Maker is busy dog",
+                                     error_type="busy",
                                      time_left=maker.time_until_done()), 400)
 
     if pop_time is None:
@@ -40,9 +55,15 @@ def make():
     maker.make_popcorn(pop_time, on_finish_function=robot.deliver)
 
     return make_response(jsonify(status="Great Success",
+                                 maker_status=maker.get_status(),
                                  pop_time=pop_time), 200)
 
 
 @app.route('/command')
 def command():
-    pass
+    """
+        Doing call / response for now, not messing around with push notifications
+        though probably would in future
+    :return:
+    """
+    return make_response(jsonify(response=robot.current_command()), 200)
