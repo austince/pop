@@ -1,14 +1,28 @@
+"""
+    Will crawl some social places and look for making pop triggers
+"""
 __author__ = 'austin'
 
-from pop import crawl_interval
-from pop.server_util import server_addr, make_endpoint
+from pop.server_util import server_addr, make_ext
 from pop.corn import Crawler
 import unirest
+from urlparse import urljoin
+from urllib import urlencode
 
 
-def found_pop():
-    print "Found a popper!"
-    unirest.post(server_addr + make_endpoint)
+def found_pop(*args, **kwargs):
+    """
+
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    url = urljoin(server_addr, make_ext)
+    print kwargs
+    if 'commands' in kwargs:
+        url = urljoin(url, "?" + urlencode(kwargs['commands']))
+    unirest.post(url)
 
 
 if __name__ == "__main__":

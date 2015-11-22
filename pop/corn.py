@@ -119,6 +119,8 @@ class Crawler:
                  found_function=lambda f: None):
         """
             Just setup the twitter api for now
+            The access token / access secret can be generated in twitter user account settings
+            No oAuth yet
         :return:
         """
         if access_token_key is None:
@@ -140,10 +142,9 @@ class Crawler:
     def stop(self):
         self.running = False
 
-    # @async
     def crawl(self):
         """
-
+            Just crawl crawl crawl looking for triggers
         :return:
         """
 
@@ -151,38 +152,39 @@ class Crawler:
 
         while self.running:
             self.found_pop_command = False
-            last_tweets = self.twitter_api.GetUserTimeline(self.username,
-                                                           count=5,
-                                                           include_rts=False,
-                                                           exclude_replies=True)
-            for tweet in last_tweets:
-                tweet_time = datetime.strptime(tweet.created_at, "%a %b %d %H:%M:%S +0000 %Y")
-                if tweet_time > self.last_time:
-                    # Analyze the tweet
-                    for tag in tweet.hashtags:
-                        if tag.text in pop_hashtags:
-                            print "Found a pop-able tweet!"
-                            self.last_time = tweet_time
-                            self.make_pop_command(tweet)
-                            self.found_pop_command = True
-                            self.found_function()
-
-                self.tweets_crawled += 1
+            self._analyze_tweets()
             self.times_crawled += 1
             print "Done crawl number: " + str(self.times_crawled)
             time.sleep(self.crawl_time)
         print "Done crawling after " + str(self.times_crawled) + " crawls. Phewf."
 
-    def found_pop(self):
-        return self.found_pop_command
+    def _analyze_tweets(self):
+        last_tweets = self.twitter_api.GetUserTimeline(self.username, count=5,
+                                                       include_rts=False,
+                                                       exclude_replies=True)
+        for tweet in last_tweets:
+            tweet_time = datetime.strptime(tweet.created_at, "%a %b %d %H:%M:%S +0000 %Y")
+
+            if tweet_time > self.last_time:
+                # Analyze the tweet for containing hashtags
+                for tag in tweet.hashtags:
+                    if tag.text in pop_hashtags:
+                        self.last_time = tweet_time
+                        command = self.make_pop_command(tweet)
+                        self.found_function(commands=command)
+
+            self.tweets_crawled += 1
 
     def make_pop_command(self, tweet):
         """
 
+        :param tweet:
         :return:
         """
         # Let's try to get how good they're feeling
-        print tweet.text
+        commands = {}
+
+        # Get their sentiment
         sentiment_data = {'language': 'english', 'text': tweet.text}
         sentiment_headers = {
             "X-Mashape-Key": mashape_key,
@@ -193,9 +195,34 @@ class Crawler:
         response = unirest.post("https://japerk-text-processing.p.mashape.com/sentiment/",
                                 headers=sentiment_headers,
                                 params=sentiment_data)
-        print response.body['label']
 
-        self.command_data = {'sentiment': response.body['label']}
+        if response.code == 200:
+            commands['sentiment'] = response.body['label']
+
+        # If time is included, get that as well
+        # Ugh what is the fancy way to do this inline python
+        # tags = []
+        # for tag in tweet.hashtags:
+        #     tags.append(tag.text)
+        #  It's this !!
+
+        if 'time' in map(lambda tag: tag.text, tweet.hashtags):
+            print "Bout time"
+            try:
+                tweet_words = tweet.text.split()
+                tag_index = tweet_words.index("#time")
+                time_str = tweet_words[tag_index+1]
+                time = float(time_str)
+                commands['time'] = time
+            except ValueError:
+                # Can't get the time, oops
+                print "Can't get time from tweet"
+                pass
+            # except IndexError:
+            #     # Who'd a thunk it
+            #     pass
+
+        return commands
 
     def get_pop_command(self):
         return self.command_data

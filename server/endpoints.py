@@ -1,6 +1,7 @@
 __author__ = 'austin'
 
 from server import app, maker, robot
+from server.util import make_message
 from flask import make_response, jsonify, request
 
 
@@ -38,7 +39,8 @@ def make():
 
     pop_time = request.args.get('pop_time', None)
     sentiment = str(request.args.get('sentiment', 'neutral'))
-
+    print "endpont " + sentiment
+    print request.args
     if maker.is_making():
         return make_response(jsonify(status="Failure",
                                      maker_status=maker.get_status(),
@@ -52,6 +54,7 @@ def make():
         pop_time = float(pop_time)
 
     # Send the robot on finish
+    robot.set_message(make_message(sentiment))
     maker.make_popcorn(pop_time, on_finish_function=robot.deliver)
 
     return make_response(jsonify(status="Great Success",
@@ -64,6 +67,8 @@ def command():
     """
         Doing call / response for now, not messing around with push notifications
         though probably would in future
+
+        @see pop.corn.Robot
     :return:
     """
     return make_response(jsonify(response=robot.current_command()), 200)
