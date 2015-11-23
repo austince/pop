@@ -1,4 +1,4 @@
-__author__ = 'austin'
+__author__ = 'austin', 'chris'
 
 import time
 import RPi.GPIO as RPIO
@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 import twitter
 from pop.decorators import async
 from pop import consumer_key, consumer_secret, pop_hashtags, mashape_key
+
+# For Stopper
+import serial
 import unirest
+from server_util import server_addr, finish_popping_ext
 
 
 class AlreadyMakingException(Exception):
@@ -289,4 +293,26 @@ class Robot:
         if message is not None:
             self.message = message
         print "Delivering: " + self.get_message()
+
+
+class Stopper:
+    """
+        By Chris
+    """
+    def __init__(self):
+        self.keep_looping = True
+        # Initiate serial connection to Arduino
+        self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+
+    def shutoff(self):
+        self.keep_looping = False
+
+    @async
+    def start_listening(self):
+        self.ser.write('START')
+        while self.keep_looping:
+            if "The popcorn is now done cooking." in self.ser.readline():
+                print "DONE"
+                unirest.post(server_addr + '/' + finish_popping_ext)
+                break
 

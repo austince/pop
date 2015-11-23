@@ -1,6 +1,6 @@
 __author__ = 'austin'
 
-from server import app, maker, robot
+from server import app, maker, robot, stopper
 from server.util import make_message
 from flask import make_response, jsonify, request
 
@@ -20,6 +20,7 @@ def stop():
     """
     #  Todo: kill the thread as well
     maker.stop()
+    stopper.shutoff()
     return make_response(jsonify(status="Great Success",
                                  maker_status=maker.get_status(),
                                  robot_status=robot.current_command()), 200)
@@ -33,6 +34,7 @@ def reset():
     """
     maker.stop()
     robot.stay()
+    stopper.shutoff()
     return make_response(jsonify(status="Great Success",
                                  maker_status=maker.get_status(),
                                  robot_status=robot.current_command()), 200)
@@ -71,6 +73,7 @@ def make():
     # Send the robot on finish
     robot.set_message(make_message(sentiment))
     maker.make_popcorn(pop_time, on_finish_function=robot.deliver)
+    stopper.start_listening()
 
     return make_response(jsonify(status="Great Success",
                                  maker_status=maker.get_status(),
@@ -82,6 +85,7 @@ def make():
 def finish_pop():
     """
         Called if the arduino senses that all the popcorn has popped
+        Should be called by Stopper
     :return:
     """
     if not maker.is_making():
