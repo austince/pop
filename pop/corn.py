@@ -29,8 +29,8 @@ class Maker:
 
     is_on = False
     pin_switch = 38
-    default_pop_time = 15
-    current_pop_time = 15
+    default_pop_time = 180
+    current_pop_time = 180
     start_time = datetime.utcnow()
 
     def __init__(self):
@@ -61,7 +61,8 @@ class Maker:
             pop_time = self.default_pop_time
 
         self.current_pop_time = pop_time
-        time.sleep(pop_time)
+        print "Pooping for :" + str(pop_time)
+        time.sleep(float(pop_time))
         # Until we do thread stoppin', just check if it was stopped during sleep
         if self.is_on:
             self.stop()

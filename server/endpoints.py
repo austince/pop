@@ -49,7 +49,7 @@ def make():
                                      time_left=maker.time_until_done()), 400)
 
     if pop_time is None:
-        pop_time = maker.current_pop_time
+        pop_time = maker.default_pop_time
     else:
         pop_time = float(pop_time)
 
@@ -71,4 +71,4 @@ def command():
         @see pop.corn.Robot
     :return:
     """
-    return make_response(jsonify(response=robot.current_command()), 200)
+    return make_response(jsonify(robot.current_command()), 200)

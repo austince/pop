@@ -19,10 +19,9 @@ def found_pop(*args, **kwargs):
     """
 
     url = urljoin(server_addr, make_ext)
-    print kwargs
     if 'commands' in kwargs:
         url = urljoin(url, "?" + urlencode(kwargs['commands']))
-    unirest.post(url)
+    print unirest.post(url)
 
 
 if __name__ == "__main__":
