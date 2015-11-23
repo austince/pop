@@ -62,6 +62,18 @@ def make():
                                  pop_time=pop_time), 200)
 
 
+@app.route('/finishedPopping', methods=['POST'])
+def finish_pop():
+    if not maker.is_making():
+        return make_response(jsonify(status="Failure",
+                                     maker_status=maker.get_status(),
+                                     error="Maker isn't running dog",
+                                     error_type="inactive"), 400)
+
+    maker.stop()
+    robot.deliver()
+
+
 @app.route('/command')
 def command():
     """
