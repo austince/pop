@@ -10,7 +10,7 @@ from pop import consumer_key, consumer_secret, pop_hashtags, mashape_key
 # For Stopper
 import serial
 import unirest
-from server_util import server_addr, finish_popping_ext
+from server_util import server_addr, finished_popping_ext
 
 
 class AlreadyMakingException(Exception):
@@ -299,20 +299,43 @@ class Stopper:
     """
         By Chris
     """
+
     def __init__(self):
-        self.keep_looping = True
+        self.keep_looping = False
+        self.status = 'off'
         # Initiate serial connection to Arduino
-        self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+        try:
+            self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+        except serial.SerialException:
+            print "Can't open Arduino connection"
 
     def shutoff(self):
         self.keep_looping = False
+        if self.ser.isOpen():
+            # R is for resent
+            self.ser.write('R')
+            self.ser.close()
 
     @async
     def start_listening(self):
-        self.ser.write('START')
+        self.keep_looping = True
+        try:
+            if not self.ser.isOpen():
+                self.ser.open()
+            self.status = 'listening'
+            # S is for start
+            self.ser.write('S')
+        except serial.SerialException:
+            print "Can't open Arduino connection"
+            # Exit early if we can't connect with that there arduino
+            return
+
+        print "Starting stopper loop"
         while self.keep_looping:
-            if "The popcorn is now done cooking." in self.ser.readline():
-                print "DONE"
-                unirest.post(server_addr + '/' + finish_popping_ext)
-                break
+            line = self.ser.readline()
+            print line
+            if "The popcorn is now done cooking." in line:
+                unirest.post(server_addr + '/' + finished_popping_ext)
+                self.keep_looping = False
+        print "Exited stopper loop"
 

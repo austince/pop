@@ -80,6 +80,14 @@ def make():
                                  robot_status=robot.current_command(),
                                  pop_time=pop_time), 200)
 
+@app.route('/shutStop')
+def shutStop():
+    stopper.start_listening()
+    stopper.shutoff()
+    return make_response(jsonify(status="Great Success",
+                                 maker_status=maker.get_status(),
+                                 robot_status=robot.current_command()), 200)
+
 
 @app.route('/finishedPopping', methods=['POST'])
 def finish_pop():
