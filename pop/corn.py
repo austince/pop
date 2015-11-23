@@ -11,6 +11,7 @@ from pop import consumer_key, consumer_secret, pop_hashtags, mashape_key
 import serial
 import unirest
 from server_util import server_addr, finished_popping_ext
+from urlparse import urljoin
 
 
 class AlreadyMakingException(Exception):
@@ -300,9 +301,10 @@ class Stopper:
         By Chris
     """
 
-    def __init__(self):
+    def __init__(self, stop_function=lambda f: None):
         self.keep_looping = False
         self.status = 'off'
+        self.stop_function = stop_function
         # Initiate serial connection to Arduino
         try:
             self.ser = serial.Serial('/dev/ttyUSB0', 115200)
@@ -335,7 +337,7 @@ class Stopper:
             line = self.ser.readline()
             print line
             if "The popcorn is now done cooking." in line:
-                unirest.post(server_addr + '/' + finished_popping_ext)
+                self.stop_function()
                 self.keep_looping = False
         print "Exited stopper loop"
 

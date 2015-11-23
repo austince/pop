@@ -5,6 +5,8 @@ from server.util import make_message
 from flask import make_response, jsonify, request
 
 
+
+
 @app.route('/time')
 def time():
     return make_response(jsonify(time_remaining=maker.time_until_done(),
@@ -80,8 +82,13 @@ def make():
                                  robot_status=robot.current_command(),
                                  pop_time=pop_time), 200)
 
+
 @app.route('/shutStop')
 def shutStop():
+    """
+        For emergency shutoff
+    :return:
+    """
     stopper.start_listening()
     stopper.shutoff()
     return make_response(jsonify(status="Great Success",
@@ -89,28 +96,7 @@ def shutStop():
                                  robot_status=robot.current_command()), 200)
 
 
-@app.route('/finishedPopping', methods=['POST'])
-def finish_pop():
-    """
-        Called if the arduino senses that all the popcorn has popped
-        Should be called by Stopper
-    :return:
-    """
-    if not maker.is_making():
-        return make_response(jsonify(status="Failure",
-                                     maker_status=maker.get_status(),
-                                     robot_status=robot.current_command(),
-                                     error="Maker isn't running dog",
-                                     error_type="inactive"), 400)
 
-    time_left = maker.time_until_done()
-    print "Stopping maker with " + str(time_left) + " seconds left"
-    maker.stop()
-    robot.deliver()
-    return make_response(jsonify(status="Great Success",
-                                 time_left=time_left,
-                                 maker_status=maker.get_status(),
-                                 robot_status=robot.current_command()), 200)
 
 
 @app.route('/comeback')
