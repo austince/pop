@@ -29,8 +29,8 @@ class Maker:
 
     is_on = False
     pin_switch = 38
-    default_pop_time = 180
-    current_pop_time = 180
+    default_pop_time = 210
+    current_pop_time = 210
     start_time = datetime.utcnow()
 
     def __init__(self):
@@ -163,6 +163,7 @@ class Crawler:
         last_tweets = self.twitter_api.GetUserTimeline(self.username, count=5,
                                                        include_rts=False,
                                                        exclude_replies=True)
+
         for tweet in last_tweets:
             tweet_time = datetime.strptime(tweet.created_at, "%a %b %d %H:%M:%S +0000 %Y")
 
@@ -261,7 +262,7 @@ class Robot:
         """
         return {'message': self.message, 'action': self.action}
 
-    def set_home(self):
+    def stay(self):
         """
 
         :return:
@@ -274,7 +275,7 @@ class Robot:
             Send a push notification to return to the base station
         :return:
         """
-        self.action = "deliver"
+        self.action = "comeback"
         if message is not None:
             self.message = message
         print "Coming home!"
